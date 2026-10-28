@@ -2,6 +2,7 @@ package kumo
 
 import (
 	"github.com/amigoer/kumo-mygo/icons/phosphor"
+	"github.com/amigoer/kumo-mygo/theme"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -31,18 +32,38 @@ type LinkOptions struct {
 func Link(c *ui.Context, label, url string, opts ...LinkOptions) ui.Element {
 	o := first(opts)
 	k := tok(c)
-	// With children of its own, the link takes an empty label and names
-	// itself for assistive technology.
-	custom := url == "" || o.External
+	// A text element cannot hold the arrow, so the text and the arrow are
+	// a row.
+	if o.External && url != "" {
+		r := ui.Row(c).Gap(3).AlignItems(ui.Center)
+		r.Children(func() {
+			styleLink(ui.Link(c, label, url), o, k)
+			icon(c, phosphor.ArrowSquareOut, 14)
+		})
+		return r
+	}
+	// An empty url has no link element to name itself: the button takes the
+	// label for assistive technology and draws it.
+	custom := url == ""
 	var l ui.Element
-	switch {
-	case url == "":
+	if custom {
 		l = ui.ButtonBase(c).Role(ui.RoleLink).Label(label)
-	case custom:
-		l = ui.Link(c, "", url).Label(label)
-	default:
+	} else {
 		l = ui.Link(c, label, url)
 	}
+	styleLink(l, o, k)
+	if custom {
+		l.Gap(3).AlignItems(ui.Center).Children(func() {
+			ui.Text(c, label)
+			if o.External {
+				icon(c, phosphor.ArrowSquareOut, 14)
+			}
+		})
+	}
+	return l
+}
+
+func styleLink(l ui.Element, o LinkOptions, k *theme.Tokens) {
 	hover := l.Hovered()
 	switch o.Variant {
 	case LinkCurrent:
@@ -67,13 +88,4 @@ func Link(c *ui.Context, label, url string, opts ...LinkOptions) ui.Element {
 		}
 	}
 	l.Cursor(ui.CursorPointer)
-	if custom {
-		l.Gap(3).AlignItems(ui.Center).Children(func() {
-			ui.Text(c, label)
-			if o.External {
-				icon(c, phosphor.ArrowSquareOut, 14)
-			}
-		})
-	}
-	return l
 }

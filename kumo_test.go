@@ -55,6 +55,22 @@ func TestButtonClicks(t *testing.T) {
 	})
 }
 
+func TestExternalLink(t *testing.T) {
+	each(t, func(t *testing.T, dark bool) {
+		tt := ui.NewTester(func(c *ui.Context) {
+			theme.Apply(c)
+			Link(c, "Docs", "https://example.com", LinkOptions{External: true})
+		}, 300, 100)
+		tt.SetDark(dark)
+		if err := tt.Click("Docs"); err != nil {
+			t.Fatal(err)
+		}
+		if urls := tt.OpenedURLs(); len(urls) != 1 || urls[0] != "https://example.com" {
+			t.Errorf("opened %q, want https://example.com", urls)
+		}
+	})
+}
+
 func TestChoices(t *testing.T) {
 	var agree, on bool
 	plan := "free"
